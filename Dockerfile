@@ -1,10 +1,13 @@
-FROM python:3.11-slim
-
+# Stage 1: build
+FROM python:3.11-slim AS builder
 WORKDIR /app
-
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
+# Stage 2: final (clean image)
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /root/.local /root/.local
 COPY . .
-
-CMD ["gunicorn", "app:app"]
+ENV PATH=/root/.local/bin:$PATH
+CMD ["python", "app.py"]
